@@ -51,22 +51,39 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 
+JOKE_TOPICS = [
+    'животные', 'работа', 'еда', 'школа', 'технологии', 'спорт',
+    'семья', 'путешествия', 'деньги', 'погода', 'врачи', 'политика',
+    'программисты', 'студенты', 'дети', 'пенсионеры', 'автомобили', 'рыбалка'
+]
+
+FACT_TOPICS = [
+    'космос', 'животные', 'история', 'еда', 'технологии', 'человеческое тело',
+    'океан', 'растения', 'древние цивилизации', 'математика', 'музыка',
+    'спорт', 'архитектура', 'насекомые', 'химия', 'география', 'кино', 'язык'
+]
+
+
 async def get_joke(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    topic = random.choice(JOKE_TOPICS)
     await update.message.reply_text("Придумываю шутку...", reply_markup=MAIN_KEYBOARD)
     message = anthropic_client.messages.create(
         model="claude-sonnet-4-6",
         max_tokens=300,
-        messages=[{"role": "user", "content": "Расскажи одну смешную короткую шутку на русском языке. Только шутку, без лишних слов."}],
+        temperature=1,
+        messages=[{"role": "user", "content": f"Расскажи одну смешную короткую шутку на русском языке на тему '{topic}'. Только шутку, без лишних слов."}],
     )
     await update.message.reply_text(message.content[0].text, reply_markup=MAIN_KEYBOARD)
 
 
 async def get_fact(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    topic = random.choice(FACT_TOPICS)
     await update.message.reply_text("Ищу интересный факт...", reply_markup=MAIN_KEYBOARD)
     message = anthropic_client.messages.create(
         model="claude-sonnet-4-6",
         max_tokens=300,
-        messages=[{"role": "user", "content": f"Расскажи один интересный факт на тему: {random.choice(['космос', 'животные', 'история', 'еда', 'технологии', 'человеческое тело', 'океан', 'растения', 'древние цивилизации', 'математика'])}. Только сам факт, без лишних слов."}],
+        temperature=1,
+        messages=[{"role": "user", "content": f"Расскажи один удивительный факт на тему '{topic}'. Только сам факт, без лишних слов."}],
     )
     await update.message.reply_text(message.content[0].text, reply_markup=MAIN_KEYBOARD)
 
