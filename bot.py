@@ -1,5 +1,6 @@
 import os
 import random
+import asyncio
 import threading
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from dotenv import load_dotenv
@@ -67,7 +68,8 @@ FACT_TOPICS = [
 async def get_joke(update: Update, context: ContextTypes.DEFAULT_TYPE):
     topic = random.choice(JOKE_TOPICS)
     await update.message.reply_text("Придумываю шутку...", reply_markup=MAIN_KEYBOARD)
-    message = anthropic_client.messages.create(
+    message = await asyncio.to_thread(
+        anthropic_client.messages.create,
         model="claude-sonnet-4-6",
         max_tokens=300,
         temperature=1,
@@ -79,7 +81,8 @@ async def get_joke(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def get_fact(update: Update, context: ContextTypes.DEFAULT_TYPE):
     topic = random.choice(FACT_TOPICS)
     await update.message.reply_text("Ищу интересный факт...", reply_markup=MAIN_KEYBOARD)
-    message = anthropic_client.messages.create(
+    message = await asyncio.to_thread(
+        anthropic_client.messages.create,
         model="claude-sonnet-4-6",
         max_tokens=300,
         temperature=1,
@@ -126,7 +129,8 @@ async def handle_buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif isinstance(user_state.get(user_id), dict) and user_state[user_id].get("mode") == "translating":
         language = user_state[user_id]["language"]
         await update.message.reply_text("Перевожу...")
-        message = anthropic_client.messages.create(
+        message = await asyncio.to_thread(
+            anthropic_client.messages.create,
             model="claude-sonnet-4-6",
             max_tokens=500,
             messages=[{"role": "user", "content": f"Переведи следующий текст на {language} язык. Только перевод, без пояснений:\n\n{text}"}],
