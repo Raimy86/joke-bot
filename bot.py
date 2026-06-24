@@ -2,8 +2,6 @@ import os
 import random
 import asyncio
 import logging
-import threading
-from http.server import HTTPServer, BaseHTTPRequestHandler
 from dotenv import load_dotenv
 import anthropic
 from telegram import Update, ReplyKeyboardMarkup
@@ -19,6 +17,7 @@ load_dotenv()
 
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
+WEBHOOK_URL = os.getenv("WEBHOOK_URL")  # например: https://your-app.onrender.com
 
 anthropic_client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
 
@@ -33,22 +32,6 @@ LANGUAGE_KEYBOARD = ReplyKeyboardMarkup(
 )
 
 user_state = {}
-
-
-class HealthHandler(BaseHTTPRequestHandler):
-    def do_GET(self):
-        self.send_response(200)
-        self.end_headers()
-        self.wfile.write(b"OK")
-
-    def log_message(self, format, *args):
-        pass
-
-
-def run_health_server():
-    port = int(os.getenv("PORT", 8080))
-    server = HTTPServer(("0.0.0.0", port), HealthHandler)
-    server.serve_forever()
 
 
 async def call_anthropic(**kwargs):
@@ -165,7 +148,7 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
     logger.error("Необработанная ошибка: %s", context.error, exc_info=context.error)
 
 
-threading.Thread(target=run_health_server, daemon=True).start()
+port = int(os.getenv("PORT", 8080))
 
 app = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
 app.add_handler(CommandHandler("start", start))
@@ -173,4 +156,8 @@ app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_buttons))
 app.add_error_handler(error_handler)
 
 print("Бот запущен!")
-app.run_polling()
+app.run_webhook(
+    listen="0.0.0.0",
+    port=port,
+    webhook_url=WEBHOOK_URL,
+)
