@@ -3,7 +3,6 @@ import random
 import asyncio
 import logging
 from dotenv import load_dotenv
-import httpx
 import anthropic
 from telegram import Update, ReplyKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
@@ -18,11 +17,9 @@ load_dotenv()
 
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
+WEBHOOK_URL = os.getenv("WEBHOOK_URL")
 
-anthropic_client = anthropic.Anthropic(
-    api_key=ANTHROPIC_API_KEY,
-    http_client=httpx.Client(proxy="socks5://127.0.0.1:9050"),
-)
+anthropic_client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
 
 MAIN_KEYBOARD = ReplyKeyboardMarkup(
     [["😂 Шутка", "🤯 Факт"], ["🌍 Переводчик"]],
@@ -151,10 +148,16 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
     logger.error("Необработанная ошибка: %s", context.error, exc_info=context.error)
 
 
+port = int(os.getenv("PORT", 8080))
+
 app = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
 app.add_handler(CommandHandler("start", start))
 app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_buttons))
 app.add_error_handler(error_handler)
 
 print("Бот запущен!")
-app.run_polling()
+app.run_webhook(
+    listen="0.0.0.0",
+    port=port,
+    webhook_url=WEBHOOK_URL,
+)
