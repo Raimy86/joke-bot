@@ -3,6 +3,7 @@ import random
 import asyncio
 import logging
 from dotenv import load_dotenv
+import httpx
 import anthropic
 from telegram import Update, ReplyKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
@@ -18,7 +19,10 @@ load_dotenv()
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
 
-anthropic_client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+anthropic_client = anthropic.Anthropic(
+    api_key=ANTHROPIC_API_KEY,
+    http_client=httpx.Client(proxy="socks5://127.0.0.1:9050"),
+)
 
 MAIN_KEYBOARD = ReplyKeyboardMarkup(
     [["😂 Шутка", "🤯 Факт"], ["🌍 Переводчик"]],
