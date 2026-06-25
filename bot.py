@@ -17,7 +17,6 @@ load_dotenv()
 
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
-WEBHOOK_URL = os.getenv("WEBHOOK_URL")  # например: https://your-app.onrender.com
 
 anthropic_client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
 
@@ -148,16 +147,10 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
     logger.error("Необработанная ошибка: %s", context.error, exc_info=context.error)
 
 
-port = int(os.getenv("PORT", 8080))
-
 app = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
 app.add_handler(CommandHandler("start", start))
 app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_buttons))
 app.add_error_handler(error_handler)
 
 print("Бот запущен!")
-app.run_webhook(
-    listen="0.0.0.0",
-    port=port,
-    webhook_url=WEBHOOK_URL,
-)
+app.run_polling()
